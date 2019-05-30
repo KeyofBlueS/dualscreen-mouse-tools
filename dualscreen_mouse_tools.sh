@@ -208,6 +208,7 @@ Permission denied!
 		fi
 	fi
 fi
+exit 0
 }
 
 givemehelp(){
