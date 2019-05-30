@@ -229,7 +229,7 @@ Section "ServerLayout"
         Screen          1 "Screen 1" 0 0 #leftOf "Screen 0"
 EndSection
 
-This script is based and mimics the operation of the (sadly unmaintained) good old dualscreen-mouse-utils, so thanks to it`s developers.
+This script is based and mimics the operation of the (sadly unmaintained) good old dualscreen-mouse-utils (mouse-wrapscreen & mouse-switchscreen), so thanks to it`s developers.
 
 ### USAGE
 
