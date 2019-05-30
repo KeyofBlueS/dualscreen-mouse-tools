@@ -29,7 +29,7 @@ sudo ln -s /opt/dualscreen-mouse-tools/flash_update.sh /usr/local/bin/dualscreen
 ### USAGE
 From terminal:
 ```sh
-$ flashupdate
+$ dualscreenmouse
 ```
 You can create a launcher or bind to a keyboard key.
 
