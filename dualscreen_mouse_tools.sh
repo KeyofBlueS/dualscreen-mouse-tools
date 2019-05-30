@@ -234,7 +234,7 @@ This script is based and mimics the operation of the (sadly unmaintained) good o
 
 From terminal:
 
-$ flashupdate
+$ dualscreenmouse
 
 You can create a launcher or bind to a keyboard key.
 
