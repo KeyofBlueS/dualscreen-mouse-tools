@@ -136,7 +136,7 @@ exit 0
 update(){
 echo -e "\e[1;34mCheck for updates...\e[0m"
 if curl -s github.com > /dev/null; then
-	SCRIPT_LINK="https://raw.githubusercontent.com/KeyofBlueS/dualscreen-mouse-tools/master/dualscreen-mouse-tools.sh"
+	SCRIPT_LINK="https://raw.githubusercontent.com/KeyofBlueS/dualscreen-mouse-tools/master/dualscreen_mouse_tools.sh"
 	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "$SCRIPT_LINK" 2> /dev/null | grep "# Version:" | head -n 1)"
 	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
 	REPOSITORY_LINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
@@ -154,7 +154,7 @@ if curl -s github.com > /dev/null; then
 \e[1;32m$UPSTREAM_VERSION (upstream)
 \e[1;33m-----------------------------------------------------------------------------------
 
-\e[1;35mHit ENTER to update this script or wait 10 seconds to go on
+\e[1;35mHit ENTER to update this script or wait 10 seconds to exit
 \e[1;31m## WARNING: any custom changes will be lost!!!
 \e[0m
 "
