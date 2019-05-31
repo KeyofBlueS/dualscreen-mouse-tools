@@ -1,12 +1,12 @@
 # dualscreen-mouse-tools
 
-# Version:    1.0.0
+# Version:    1.1.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 ### DESCRIPTION
-This bash script uses xdotool to make possible to easly enable\disable crossing the mousepointer between two "really separated" xscreens (screen 0 and screen 1) when it reach a side edge of screen. In order for this tool to work, screens must be configured to something like this in xorg.conf:
+This bash script uses xdotool to make possible to easly enable\disable crossing the mousepointer between two "really separated" xscreens (screen 0 and screen 1) when it reach a side edge of screen, it can even teleport the mouse pointer from one screen to the other. In order for this tool to work, screens must be configured to something like this in xorg.conf:
 ```
 Section "ServerLayout"
         Identifier      "Default Layout"
@@ -37,7 +37,9 @@ Options:
 ```
 --resistance <n>	Mouse pointer has an edge resistance of <n> when crossing from one screen to the other (default 10)
 
---switch		Teleport the mouse pointer from one screen to the other
+--switch		Teleport the mouse pointer from the center of one screen to the center of the other screen
+
+--switch-remember	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
 
 --help			Show description and help of dualscreen-mouse-tools
 
