@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.1.0
+# Version:    1.1.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -8,16 +8,15 @@
 #echo -n "Checking dependencies... "
 for name in awk perl xdotool xdpyinfo
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name is required by this script. Use 'sudo apt-get install $name'";deps=1; }
+  [[ $(which $name 2>/dev/null) ]] || { echo -e "\n$name is required by this script. Use 'sudo apt-get install $name'
+Install the requested dependencies and restart this script"; exit 1; }
 done
-[[ $deps -ne 1 ]] && echo "" || { echo -en "\nInstall the requested dependencies and restart this script\n";exit 1; }
 
 for name in curl
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name it's recommended in order to perform updates. Use 'sudo apt-get install $name'";deps=1; }
+  [[ $(which $name 2>/dev/null) ]] || { echo -e "\n$name it's recommended in order to perform updates. Use 'sudo apt-get install $name'
+If you prefer, install the requested dependencies and restart this script"; }
 done
-[[ $deps -ne 1 ]] && echo "" || { echo -en "\nIf you prefer, install the requested dependencies and restart this script\n";}
-
 
 echo $@ | grep -Poq '\d+'
 if [ $? = 0 ]; then
@@ -42,40 +41,39 @@ SCREEN0_XRESOLUTION="$(echo $SCREEN0_RESOLUTION | awk -Fx '{print $1}')"
 SCREEN0_YRESOLUTION="$(echo $SCREEN0_RESOLUTION | awk -Fx '{print $2}')"
 SCREEN0_XCENTER="$(perl -e "print $SCREEN0_XRESOLUTION / 2")"
 #SCREEN0_YCENTER="$(perl -e "print $SCREEN0_YRESOLUTION / 2")"
+#SCREEN0_XRESOLUTION_PERCENT="$(perl -e "print $SCREEN0_XRESOLUTION / 100")"
+SCREEN0_YRESOLUTION_PERCENT="$(perl -e "print $SCREEN0_YRESOLUTION / 100")"
 
 SCREEN1_RESOLUTION="$(xdpyinfo | grep -A2 '^screen #1' | grep 'dimensions:' | awk -F: '{print $2}' | awk -F' ' '{print $1}')"
 SCREEN1_XRESOLUTION="$(echo $SCREEN1_RESOLUTION | awk -Fx '{print $1}')"
 SCREEN1_YRESOLUTION="$(echo $SCREEN1_RESOLUTION | awk -Fx '{print $2}')"
 SCREEN1_XCENTER="$(perl -e "print $SCREEN1_XRESOLUTION / 2")"
 #SCREEN1_YCENTER="$(perl -e "print $SCREEN1_YRESOLUTION / 2")"
+#SCREEN1_XRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_XRESOLUTION / 100")"
+SCREEN1_YRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_YRESOLUTION / 100")"
 chekscreen
 }
 
 chekscreen(){
 eval $(xdotool getmouselocation --shell)
 if [ $SCREEN -eq 0 ]; then
-	CURRENTSCREEN_XRESOLUTION=$SCREEN0_XRESOLUTION
 	CURRENTSCREEN_YRESOLUTION=$SCREEN0_YRESOLUTION
 	CURRENTSCREEN_XCENTER=$SCREEN0_XCENTER
-#	CURRENTSCREEN_YCENTER=$SCREEN0_YCENTER
 	NEXTSCREEN_XRESOLUTION=$SCREEN1_XRESOLUTION
-	NEXTSCREEN_YRESOLUTION=$SCREEN1_YRESOLUTION
+	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN1_YRESOLUTION_PERCENT
 	NEXTSCREEN=1
 else
-	CURRENTSCREEN_XRESOLUTION=$SCREEN1_XRESOLUTION
 	CURRENTSCREEN_YRESOLUTION=$SCREEN1_YRESOLUTION
 	CURRENTSCREEN_XCENTER=$SCREEN1_XCENTER
-#	CURRENTSCREEN_YCENTER=$SCREEN1_YCENTER
 	NEXTSCREEN_XRESOLUTION=$SCREEN0_XRESOLUTION
-	NEXTSCREEN_YRESOLUTION=$SCREEN0_YRESOLUTION
+	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN0_YRESOLUTION_PERCENT
 	NEXTSCREEN=0
 fi
 $CROSSTYPE
 }
 
 crossedge_side(){
-CURRENTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION")"
-NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $NEXTSCREEN_YRESOLUTION / 100 * $CURRENTSCREEN_YMOUSECOORDINATE")"
+NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION * $NEXTSCREEN_YRESOLUTION_PERCENT")"
 if [ $SCREEN -ne $SIDE ]; then
 	NEXTSCREEN_XMOUSECOORDINATE=0
 	pkill -15 -f "xdotool behave_screen_edge*"
@@ -90,8 +88,7 @@ chekscreen
 }
 
 crossedge_both(){
-CURRENTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION")"
-NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $NEXTSCREEN_YRESOLUTION / 100 * $CURRENTSCREEN_YMOUSECOORDINATE")"
+NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION * $NEXTSCREEN_YRESOLUTION_PERCENT")"
 if [ $X -gt $CURRENTSCREEN_XCENTER ]; then
 	NEXTSCREEN_XMOUSECOORDINATE=0
 	pkill -15 -f "xdotool behave_screen_edge*"
@@ -107,33 +104,23 @@ chekscreen
 
 teleport(){
 eval $(xdotool getmouselocation --shell)
+echo "X=$X
+Y=$Y" > /tmp/dualscreen_mouse_tools_coordinates_$SCREEN &
 if [ $SCREEN -eq 0 ]; then
 	NEXTSCREEN=1
 else
 	NEXTSCREEN=0
 fi
-if echo $REMEMBER | grep 'no'; then
+if echo $REMEMBER | grep -q 'no'; then
 	xdotool mousemove --screen $NEXTSCREEN --polar 0 0 > /dev/null
 else
-	if cat /tmp/dualscreen_mouse_tools_coordinates* | grep -q "X="; then
-		if echo $SCREEN | grep "0"; then
-			OLDX="$(cat /tmp/dualscreen_mouse_tools_coordinates_1 | grep "X" | grep -Po '\d+')"
-			OLDY="$(cat /tmp/dualscreen_mouse_tools_coordinates_1 | grep "Y" | grep -Po '\d+')"
-		else
-			OLDX="$(cat /tmp/dualscreen_mouse_tools_coordinates_0 | grep "X" | grep -Po '\d+')"
-			OLDY="$(cat /tmp/dualscreen_mouse_tools_coordinates_0 | grep "Y" | grep -Po '\d+')"
-		fi
+	if grep -Poq '\d+' /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN; then
+		OLDX="$(grep "X" /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN | grep -Po '\d+')"
+		OLDY="$(grep "Y" /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN | grep -Po '\d+')"
 		xdotool mousemove --screen $NEXTSCREEN $OLDX $OLDY > /dev/null
 	else
 		xdotool mousemove --screen $NEXTSCREEN --polar 0 0 > /dev/null
 	fi
-fi
-if echo $SCREEN | grep -q "0"; then
-	echo "X=$X
-Y=$Y" > /tmp/dualscreen_mouse_tools_coordinates_0
-else
-	echo "X=$X
-Y=$Y" > /tmp/dualscreen_mouse_tools_coordinates_1
 fi
 #if pgrep -x "compiz" > /dev/null; then
 #	xdotool key "super+k" && sleep 0.8 && xdotool key "super+k"
@@ -228,21 +215,34 @@ givemehelp(){
 echo '
 # dualscreen-mouse-tools
 
-# Version:    1.1.0
+# Version:    1.1.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 ### DESCRIPTION
-This bash script uses xdotool to easly enable\disable crossing the mousepointer between two "really separated" xscreens (screen 0 and screen 1) when it reach a side edge of screen, it can even teleport the mouse pointer from one screen to the other. In order for this tool to work, screens must be configured to something like this in xorg.conf:
+This bash script uses xdotool to easly enable\disable crossing the mousepointer between two "really separated" xscreens (screen 0 and screen 1) when it reach a side edge of screen, it can even teleport the mouse pointer from one screen to the other.
+This script is based and mimics the operation of the (sadly unmaintained) good old dualscreen-mouse-utils, so thanks to it`s developers.
+
+In order for this tool to work, screens must be configured in xorg.conf (usually in /etc/X11/xorg.conf) to be independent and separated. Let`s say that Screen 0 is 1920x1080 and Screen 1 is 1280x1024, Screen 1 is on the left of Screen 0. To "separate" the screens, Screen 0 MUST be far from Screen 1 AT LEAST the value of Screen 1 width+1 (1281), so 3000 is fine:
 
 Section "ServerLayout"
-        Identifier      "Default Layout"
-        Screen          0 "Screen 0" 3000 0
-        Screen          1 "Screen 1" 0 0 #leftOf "Screen 0"
+    Identifier     "Layout0"
+    Screen      0  "Screen0" 3000 0
+    Screen      1  "Screen1" 0 0
 EndSection
 
-This script is based and mimics the operation of the (sadly unmaintained) good old dualscreen-mouse-utils, so thanks to it`s developers.
+The example below shows the same setup as before but Screen 1 is on the right of Screen 0. Screen 1 is far from Screen 0 the value of Screen 0 width+1 (1921, but 3000 would still be fine yet):
+
+Section "ServerLayout"
+    Identifier     "Layout0"
+    Screen      0  "Screen0" 0 0
+    Screen      1  "Screen1" 1921 0
+EndSection
+
+This configuration is necessary to be able to lock the mouse pointer inside one screen, which would otherwise be free to travel to the other one.
+For just the "teleport" feature, there is no need to do any configuration in xorg.conf.
+
 
 ### USAGE
 
@@ -252,23 +252,27 @@ $ dualscreenmouse
 
 You can create a launcher or bind to a keyboard key.
 
-Options:
---resistance <n>	Mouse pointer has an edge resistance of <n> when crossing from one screen to the other (default 10)
-
---switch		Teleport the mouse pointer from the center of one screen to the center of the other screen
-
---switch-remember	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
-
---help			Show description and help of dualscreen-mouse-tools
-
---update		Check for updates
-
+Options for crossing edges:
 You can define the relation of the screens, if you want the cursor to only pass one edge:
 --left			Screen 1 is left of screen 0
 
 --right			Screen 1 is rigt of screen 0
 
 --both			Pass cursor on both the left and the right edge (default)
+
+--resistance <n>	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 10)
+
+
+Options for switching screens:
+--switch		Teleport the mouse pointer from the center of one screen to the center of the other screen
+
+--switch-remember	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
+
+
+Other options:
+--update		Check for updates
+
+--help			Show description and help of dualscreen-mouse-tools
 '
 exit 0
 }
