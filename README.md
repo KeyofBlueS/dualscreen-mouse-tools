@@ -45,7 +45,7 @@ From terminal:
 $ dualscreenmouse
 ```
 You can create a launcher or bind it to a keyboard key.
-
+```
 Options for crossing edges:
 You can define the relation of the screens, if you want the cursor to only pass one edge:
 --left			Screen 1 is left of screen 0
@@ -67,3 +67,4 @@ Other options:
 --update		Check for updates
 
 --help			Show description and help of dualscreen-mouse-tools
+```
