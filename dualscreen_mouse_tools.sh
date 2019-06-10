@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.1.2
+# Version:    1.2.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -8,24 +8,26 @@
 #echo -n "Checking dependencies... "
 for name in awk perl xdotool xdpyinfo
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -e "\n$name is required by this script. Use 'sudo apt-get install $name'
-Install the requested dependencies and restart this script"; exit 1; }
+  [[ $(which $name 2>/dev/null) ]] || { echo -e "\e[1;31m$name is required by this script. Use 'sudo apt-get install $name'
+Install the requested dependencies and restart this script\e[0m"; exit 1; }
 done
 
 for name in curl
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -e "\n$name it's recommended in order to perform updates. Use 'sudo apt-get install $name'
-If you prefer, install the requested dependencies and restart this script"; }
+  [[ $(which $name 2>/dev/null) ]] || { echo -e "\e[1;33m$name it's recommended in order to perform updates. Use 'sudo apt-get install $name'
+If you prefer, install the requested dependencies and restart this script\e[0m"; }
 done
 
-echo $@ | grep -Poq '\d+'
-if [ $? = 0 ]; then
-	DELAY="$(echo $@ | grep -Po '\d+')"
+if xdpyinfo | grep -q "^screen #1"; then
+	echo -n
+elif [ "$1" = "-u" ] || [ "$1" = "-h" ]; then
+	echo -n
 else
-	DELAY=10
+	echo -e "\e[1;31m## ERROR: screen 1 not found! exiting...\e[0m"
+	exit 1
 fi
 
-start(){
+crossedge(){
 for pid in $(pgrep "dualscreenmouse"); do
     if [ $pid != $$ ]; then
         kill -15 $pid
@@ -34,7 +36,14 @@ for pid in $(pgrep "dualscreenmouse"); do
     fi 
 done
 
+if echo $DELAY | grep -Poq '\d+'; then
+	echo -n
+else
+	DELAY=0
+fi
+
 SLEEPTIME="$(perl -e "print $DELAY / 1000 + 0.255")"
+TIMEOUT="$(perl -e "print $SLEEPTIME + 0.745")"
 
 SCREEN0_RESOLUTION="$(xdpyinfo | grep -A2 '^screen #0' | grep 'dimensions:' | awk -F: '{print $2}' | awk -F' ' '{print $1}')"
 SCREEN0_XRESOLUTION="$(echo $SCREEN0_RESOLUTION | awk -Fx '{print $1}')"
@@ -51,10 +60,8 @@ SCREEN1_XCENTER="$(perl -e "print $SCREEN1_XRESOLUTION / 2")"
 #SCREEN1_YCENTER="$(perl -e "print $SCREEN1_YRESOLUTION / 2")"
 #SCREEN1_XRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_XRESOLUTION / 100")"
 SCREEN1_YRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_YRESOLUTION / 100")"
-chekscreen
-}
-
-chekscreen(){
+while true
+do
 eval $(xdotool getmouselocation --shell)
 if [ $SCREEN -eq 0 ]; then
 	CURRENTSCREEN_YRESOLUTION=$SCREEN0_YRESOLUTION
@@ -69,36 +76,28 @@ else
 	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN0_YRESOLUTION_PERCENT
 	NEXTSCREEN=0
 fi
+if echo $CROSSTYPE | grep -q "crossedge_side"; then
+	if [ $SCREEN -ne $SIDE ]; then
+		NEXTSCREEN_XMOUSECOORDINATE=0
+		EDGE=right
+	else
+		NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
+		EDGE=left
+	fi
+else
+	if [ $X -gt $CURRENTSCREEN_XCENTER ]; then
+		NEXTSCREEN_XMOUSECOORDINATE=0
+		EDGE=right
+	else
+		NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
+		EDGE=left
+	fi
+fi
 NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION * $NEXTSCREEN_YRESOLUTION_PERCENT")"
-$CROSSTYPE
-}
-
-crossedge_side(){
-if [ $SCREEN -ne $SIDE ]; then
-	NEXTSCREEN_XMOUSECOORDINATE=0
-	pkill -15 -f "xdotool behave_screen_edge*"
-	xdotool behave_screen_edge --delay $DELAY right mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
-else
-	NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
-	pkill -15 -f "xdotool behave_screen_edge*"
-	xdotool behave_screen_edge --delay $DELAY left mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
-fi
+pkill -15 -f "xdotool behave_screen_edge*"
+timeout -s SIGKILL $TIMEOUT xdotool behave_screen_edge --delay $DELAY $EDGE mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
 sleep $SLEEPTIME
-chekscreen
-}
-
-crossedge_both(){
-if [ $X -gt $CURRENTSCREEN_XCENTER ]; then
-	NEXTSCREEN_XMOUSECOORDINATE=0
-	pkill -15 -f "xdotool behave_screen_edge*"
-	xdotool behave_screen_edge --delay $DELAY right mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
-else
-	NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
-	pkill -15 -f "xdotool behave_screen_edge*"
-	xdotool behave_screen_edge --delay $DELAY left mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
-fi
-sleep $SLEEPTIME
-chekscreen
+done
 }
 
 teleport(){
@@ -124,11 +123,6 @@ fi
 #if pgrep -x "compiz" > /dev/null; then
 #	xdotool key "super+k" && sleep 0.8 && xdotool key "super+k"
 #fi
-exit 0
-}
-
-exitstep(){
-kill $$ & pkill -15 -f "xdotool behave_screen_edge*"
 exit 0
 }
 
@@ -197,7 +191,7 @@ Permission denied!
 			fi
 			LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
 			if echo "$LOCAL_VERSION" | grep -q "$UPSTREAM_VERSION"; then
-				echo -e "\e[1;34m	Fatto!
+				echo -e "\e[1;34m	Done!
 \e[0m"
 				exec "${scriptfolder}${scriptname}"
 			else
@@ -214,7 +208,7 @@ givemehelp(){
 echo '
 # dualscreen-mouse-tools
 
-# Version:    1.1.2
+# Version:    1.2.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -228,7 +222,7 @@ In order for this tool to work, screens must be configured in xorg.conf (usually
 Section "ServerLayout"
     Identifier     "Layout0"
     Screen      0  "Screen0" 3000 0
-    Screen      1  "Screen1" 0 0
+    Screen 0     1  "Screen1" 0 0
 EndSection
 
 The example below shows the same setup as before but Screen 1 is on the right of Screen 0. Screen 1 is far from Screen 0 the value of Screen 0 width+1 (1921, but 3000 would still be fine yet):
@@ -240,7 +234,7 @@ Section "ServerLayout"
 EndSection
 
 This configuration is necessary to be able to lock the mouse pointer inside one screen, which would otherwise be free to travel to the other one.
-For just the "teleport" feature, there is no need to do any configuration in xorg.conf.
+For just "teleport" feature, there is no need to do any configuration in xorg.conf.
 
 
 ### USAGE
@@ -253,55 +247,76 @@ You can create a launcher or bind to a keyboard key.
 
 Options for crossing edges:
 You can define the relation of the screens, if you want the cursor to only pass one edge:
---left			Screen 1 is left of screen 0
+--left -l		Screen 1 is left of screen 0
 
---right			Screen 1 is rigt of screen 0
+--right -r		Screen 1 is rigt of screen 0
 
---both			Pass cursor on both the left and the right edge (default)
+--both -b		Pass cursor on both the left and the right edge (default)
 
---resistance <n>	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 10)
+--resistance n -d n	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 0)
 
 
 Options for switching screens:
---switch		Teleport the mouse pointer from the center of one screen to the center of the other screen
+--switch -s		Teleport the mouse pointer from the center of one screen to the center of the other screen
 
---switch-remember	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
+--switch-remember -w	Teleport the mouse lpointer from one screen to the other screen, remembering last position if exist
 
 
 Other options:
---update		Check for updates
+--update -u		Check for updates
 
---help			Show description and help of dualscreen-mouse-tools
+--help -h		Show description and help of dualscreen-mouse-tools
 '
 exit 0
 }
 
-trap exitstep INT
+for opt in "$@"; do
+	shift
+	case "$opt" in
+		'--resistance')		set -- "$@" '-d' ;;
+		'--left')		set -- "$@" '-l' ;;
+		'--right')		set -- "$@" '-r' ;;
+		'--both')		set -- "$@" '-b' ;;
+		'--switch')		set -- "$@" '-s' ;;
+		'--switch-remember')	set -- "$@" '-w' ;;
+		'--update')		set -- "$@" '-u' ;;
+		'--help')		set -- "$@" '-h' ;;
+		*)                      set -- "$@" "$opt"
+	esac
+done
 
+while getopts ":d:lrbswuh" opt; do
+	case ${opt} in
+		d ) if echo $OPTARG | grep -Poq '\d+'; then
+			DELAY=$OPTARG
+		else
+			echo -e "\e[1;33m## WARNING: option -d requires an argument\e[0m"
+			DELAY=0
+		fi
+		;;
+		l ) STEP=crossedge; SIDE=0; CROSSTYPE=crossedge_side
+		;;
+		r ) STEP=crossedge; SIDE=1; CROSSTYPE=crossedge_side
+		;;
+		b ) STEP=crossedge; CROSSTYPE=crossedge_both
+		;;
+		s ) STEP=teleport; REMEMBER=no
+		;;
+		w ) STEP=teleport
+		;;
+		u ) STEP=update
+		;;
+		h ) STEP=givemehelp
+		;;
+		*) INVALID=1; echo -e "\e[1;31m## ERROR: invalid option $OPTARG\e[0m"
+	esac
+done
 
-if [ "$1" = "--left" ]; then
-	SIDE=0
-	CROSSTYPE=crossedge_side
-	start
-elif [ "$1" = "--right" ]; then
-	SIDE=1
-	CROSSTYPE=crossedge_side
-	start
-elif [ "$1" = "--both" ]; then
-	CROSSTYPE=crossedge_both
-	start
-elif [ "$1" = "--switch" ]; then
-	REMEMBER=no
-	teleport
-elif [ "$1" = "--switch-remember" ]; then
-	teleport
-elif [ "$1" = "--help" ]; then
+if echo $INVALID | grep -xq "1"; then
 	givemehelp
-elif [ "$1" = "--update" ]; then
-	update
-elif [ "$1" = "--exit" ]; then
-	exitstep
+	exit 1
+elif echo $STEP | grep -Eq '[a-zA-Z0-9]'; then
+	$STEP
 else
-	CROSSTYPE=crossedge_both
-	start
+	CROSSTYPE=crossedge_both; crossedge
 fi
