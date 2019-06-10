@@ -1,6 +1,6 @@
 # dualscreen-mouse-tools
 
-# Version:    1.1.2
+# Version:    1.2.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -48,23 +48,23 @@ You can create a launcher or bind it to a keyboard key.
 ```
 Options for crossing edges:
 You can define the relation of the screens, if you want the cursor to only pass one edge:
---left			Screen 1 is left of screen 0
+--left -l	    	Screen 1 is left of screen 0
 
---right			Screen 1 is rigt of screen 0
+--right -r  		Screen 1 is rigt of screen 0
 
---both			Pass cursor on both the left and the right edge (default)
+--both -b		    Pass cursor on both the left and the right edge (default)
 
---resistance <n>	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 10)
+--resistance n -d n	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 0)
 
 
 Options for switching screens:
---switch		Teleport the mouse pointer from the center of one screen to the center of the other screen
+--switch -s		        Teleport the mouse pointer from the center of one screen to the center of the other screen
 
---switch-remember	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
+--switch-remember -w	Teleport the mouse lpointer from one screen to the other screen, remembering last position if exist
 
 
 Other options:
---update		Check for updates
+--update -u		Check for updates
 
---help			Show description and help of dualscreen-mouse-tools
+--help -h		Show description and help of dualscreen-mouse-tools
 ```
