@@ -52,13 +52,13 @@ You can define the relation of the screens, if you want the cursor to only pass 
 
 --right -r  		Screen 1 is rigt of screen 0
 
---both -b		    Pass cursor on both the left and the right edge (default)
+--both -b		Pass cursor on both the left and the right edge (default)
 
 --resistance n -d n	Mouse pointer has an edge resistance of <n> milliseconds when crossing from one screen to the other (default 0)
 
 
 Options for switching screens:
---switch -s		        Teleport the mouse pointer from the center of one screen to the center of the other screen
+--switch -s		Teleport the mouse pointer from the center of one screen to the center of the other screen
 
 --switch-remember -w	Teleport the mouse lpointer from one screen to the other screen, remembering last position if exist
 
