@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.2.0
+# Version:    1.2.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -8,27 +8,50 @@
 #echo -n "Checking dependencies... "
 for name in awk perl xdotool xdpyinfo
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -e "\e[1;31m$name is required by this script. Use 'sudo apt-get install $name'
-Install the requested dependencies and restart this script\e[0m"; exit 1; }
-done
-
-for name in curl
-do
-  [[ $(which $name 2>/dev/null) ]] || { echo -e "\e[1;33m$name it's recommended in order to perform updates. Use 'sudo apt-get install $name'
-If you prefer, install the requested dependencies and restart this script\e[0m"; }
-done
-
-if xdpyinfo | grep -q "^screen #1"; then
-	echo -n
-elif [ "$1" = "-u" ] || [ "$1" = "-h" ]; then
+if which $name > /dev/null; then
 	echo -n
 else
-	echo -e "\e[1;31m## ERROR: screen 1 not found! exiting...\e[0m"
+	if echo $name | grep -xq "awk"; then
+		name="gawk"
+	fi
+	if echo $name | grep -xq "xdpyinfo"; then
+		name="x11-utils"
+	fi
+	if [ -z "${missing}" ]; then
+		missing="$name"
+	else
+		missing="$missing $name"
+	fi
+fi
+done
+if ! [ -z "${missing}" ]; then
+	echo -e "\e[1;31mThis script require \e[1;34m$missing\e[1;31m. Use \e[1;34msudo apt-get install $missing
+\e[1;31mInstall the requested dependencies and restart this script\e[0m"
 	exit 1
 fi
 
+#echo -n "Checking recommended... "
+for name in curl
+do
+if which $name > /dev/null; then
+	echo -n
+else
+	if [ -z "${missing}" ]; then
+		missing="$name"
+	else
+		missing="$missing $name"
+	fi
+fi
+done
+if ! [ -z "${missing}" ]; then
+	echo -e "\e[1;31mThis script recommends \e[1;34m$missing\e[1;31m in order to perform updates. Use \e[1;34msudo apt-get install $missing
+\e[1;31mIf you prefer, install the requested dependencies and restart this script\e[0m"
+fi
+
 crossedge(){
-for pid in $(pgrep "dualscreenmouse"); do
+processpath="${0}"
+processname="${processpath##*/}"
+for pid in $(pgrep "$processname"); do
     if [ $pid != $$ ]; then
         kill -15 $pid
 	pkill -15 -f "xdotool behave_screen_edge*"
@@ -208,7 +231,7 @@ givemehelp(){
 echo '
 # dualscreen-mouse-tools
 
-# Version:    1.2.0
+# Version:    1.2.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
