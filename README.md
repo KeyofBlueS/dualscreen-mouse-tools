@@ -1,6 +1,6 @@
 # dualscreen-mouse-tools
 
-# Version:    1.2.0
+# Version:    1.2.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
