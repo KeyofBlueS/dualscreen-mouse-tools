@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.2.2
+# Version:    1.2.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -11,10 +11,10 @@ do
 if which $name > /dev/null; then
 	echo -n
 else
-	if echo $name | grep -xq "awk"; then
+	if [ $name = "awk" ]; then
 		name="gawk"
 	fi
-	if echo $name | grep -xq "xdpyinfo"; then
+	if [ $name = "xdpyinfo" ]; then
 		name="x11-utils"
 	fi
 	if [ -z "${missing}" ]; then
@@ -26,7 +26,7 @@ fi
 done
 if ! [ -z "${missing}" ]; then
 	echo -e "\e[1;31mThis script require \e[1;34m$missing\e[1;31m. Use \e[1;34msudo apt-get install $missing
-\e[1;31mInstall the requested dependencies and restart this script\e[0m"
+\e[1;31mInstall the requested dependencies and restart this script.\e[0m"
 	exit 1
 fi
 
@@ -49,14 +49,21 @@ if ! [ -z "${missing}" ]; then
 fi
 
 crossedge(){
+if xdpyinfo | grep '^screen #1'; then
+	echo -n
+else
+	echo -e "\e[1;31m## ERROR: screen 1 not found\e[0m"
+	exit 1
+fi
+
 processpath="${0}"
 processname="${processpath##*/}"
 for pid in $(pgrep "$processname"); do
-    if [ $pid != $$ ]; then
-        kill -15 $pid
-	pkill -15 -f "xdotool behave_screen_edge*"
-	exit 0
-    fi 
+	if [ $pid != $$ ]; then
+		kill -15 $pid
+		pkill -15 -f "xdotool behave_screen_edge*"
+		exit 0
+	fi 
 done
 
 if echo $DELAY | grep -Poq '\d+'; then
@@ -99,7 +106,7 @@ else
 	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN0_YRESOLUTION_PERCENT
 	NEXTSCREEN=0
 fi
-if echo $CROSSTYPE | grep -q "crossedge_side"; then
+if [ $CROSSTYPE = "crossedge_side" ]; then
 	if [ $SCREEN -ne $SIDE ]; then
 		NEXTSCREEN_XMOUSECOORDINATE=0
 		EDGE=right
@@ -124,6 +131,13 @@ done
 }
 
 teleport(){
+if xdpyinfo | grep '^screen #1'; then
+	echo -n
+else
+	echo -e "\e[1;31m## ERROR: screen 1 not found\e[0m"
+	exit 1
+fi
+
 eval $(xdotool getmouselocation --shell)
 echo "X=$X
 Y=$Y" > /tmp/dualscreen_mouse_tools_coordinates_$SCREEN &
@@ -132,7 +146,7 @@ if [ $SCREEN -eq 0 ]; then
 else
 	NEXTSCREEN=0
 fi
-if echo $REMEMBER | grep -q 'no'; then
+if [ $REMEMBER = 'no' ]; then
 	xdotool mousemove --screen $NEXTSCREEN --polar 0 0 > /dev/null
 else
 	if grep -Poq '\d+' /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN; then
@@ -198,7 +212,18 @@ if curl -s github.com > /dev/null; then
 					chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					chmod +x "${scriptfolder}${scriptname}" > /dev/null 2>&1
 				elif which sudo > /dev/null 2>&1; then
+					while true
+					do
 					echo -e "\e[1;33mIn order to update you must grant root permissions\e[0m"
+					if sudo -v; then
+						break
+					else
+						echo -e "\e[1;31mPermission denied! Press ENTER to exit or wait 5 seconds to retry\e[0m"
+						if read -t 5 _e; then
+							exit 1
+						fi
+					fi
+					done
 					sudo mv /tmp/"${scriptname}" "${scriptfolder}"
 					sudo chown root:root "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					sudo chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
@@ -231,7 +256,7 @@ givemehelp(){
 echo '
 # dualscreen-mouse-tools
 
-# Version:    1.2.2
+# Version:    1.2.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -282,7 +307,7 @@ You can define the relation of the screens, if you want the cursor to only pass 
 Options for switching screens:
 --switch -s		Teleport the mouse pointer from the center of one screen to the center of the other screen
 
---switch-remember -w	Teleport the mouse lpointer from one screen to the other screen, remembering last position if exist
+--switch-remember -w	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
 
 
 Other options:
@@ -337,7 +362,6 @@ done
 
 if echo $INVALID | grep -xq "1"; then
 	givemehelp
-	exit 1
 elif echo $STEP | grep -Eq '[a-zA-Z0-9]'; then
 	$STEP
 else
