@@ -29,14 +29,20 @@ This configuration is necessary to be able to lock the mouse pointer inside one 
 For just the "teleport" feature, there is no need to do any configuration in xorg.conf.
 
 ### INSTALL
+Install git:
 ```sh
-curl -o /tmp/dualscreen_mouse_tools.sh 'https://raw.githubusercontent.com/KeyofBlueS/dualscreen-mouse-tools/master/dualscreen_mouse_tools.sh'
+sudo apt-get install git
+```
+then:
+```sh
+git clone -b master https://github.com/KeyofBlueS/dualscreen-mouse-tools /tmp/dualscreen-mouse-tools
 sudo mkdir -p /opt/dualscreen-mouse-tools/
-sudo mv /tmp/dualscreen_mouse_tools.sh /opt/dualscreen-mouse-tools/
+sudo mv /tmp/dualscreen-mouse-tools/dualscreen_mouse_tools.sh /opt/dualscreen-mouse-tools/
 sudo chown root:root /opt/dualscreen-mouse-tools/dualscreen_mouse_tools.sh
 sudo chmod 755 /opt/dualscreen-mouse-tools/dualscreen_mouse_tools.sh
 sudo chmod +x /opt/dualscreen-mouse-tools/dualscreen_mouse_tools.sh
-sudo ln -s /opt/dualscreen-mouse-tools/flash_update.sh /usr/local/bin/dualscreenmouse
+sudo ln -s /opt/dualscreen-mouse-tools/dualscreen_mouse_tools.sh /usr/local/bin/dualscreenmouse
+rm -rf /tmp/dualscreen-mouse-tools
 ```
 ### USAGE
 
