@@ -60,7 +60,7 @@ You can define the relation of the screens, if you want the cursor to only pass 
 Options for switching screens:
 --switch -s		Teleport the mouse pointer from the center of one screen to the center of the other screen
 
---switch-remember -w	Teleport the mouse lpointer from one screen to the other screen, remembering last position if exist
+--switch-remember -w	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
 
 
 Other options:
