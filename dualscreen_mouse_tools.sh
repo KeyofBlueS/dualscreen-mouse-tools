@@ -1,137 +1,137 @@
 #!/bin/bash
 
-# Version:    1.2.4
+# Version:    1.2.6
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 #echo -n "Checking dependencies... "
-for name in awk perl xdotool xdpyinfo
+for bin in awk perl xdotool xdpyinfo
 do
-if which $name > /dev/null; then
+if which "${bin}" > /dev/null; then
 	echo -n
 else
-	if [ $name = "awk" ]; then
-		name="gawk"
+	if [ $bin = "awk" ]; then
+		bin="gawk"
 	fi
-	if [ $name = "xdpyinfo" ]; then
-		name="x11-utils"
+	if [ $bin = "xdpyinfo" ]; then
+		bin="x11-utils"
 	fi
 	if [ -z "${missing}" ]; then
-		missing="$name"
+		missing="${bin}"
 	else
-		missing="$missing $name"
+		missing=""${missing}" "${bin}""
 	fi
 fi
 done
 if ! [ -z "${missing}" ]; then
-	echo -e "\e[1;31mThis script require \e[1;34m$missing\e[1;31m. Use \e[1;34msudo apt-get install $missing
+	echo -e "\e[1;31mThis script require \e[1;34m"${missing}"\e[1;31m. Use \e[1;34msudo apt-get install "${missing}"
 \e[1;31mInstall the requested dependencies and restart this script.\e[0m"
 	exit 1
 fi
 
-#echo -n "Checking recommended... "
-for name in curl
+#echo -n "Checking update tools... "
+for bin in curl git
 do
-if which $name > /dev/null; then
+if which "${bin}" > /dev/null; then
 	echo -n
 else
 	if [ -z "${missing}" ]; then
-		missing="$name"
+		missing="${bin}"
 	else
-		missing="$missing $name"
+		missing=""${missing}" "${bin}""
 	fi
 fi
 done
 if ! [ -z "${missing}" ]; then
-	echo -e "\e[1;31mThis script recommends \e[1;34m$missing\e[1;31m in order to perform updates. Use \e[1;34msudo apt-get install $missing
-\e[1;31mIf you prefer, install the requested dependencies and restart this script\e[0m"
+	echo -e "\e[1;33mThis script recommends \e[1;34m"${missing}"\e[1;33m in order to perform updates. Use \e[1;34msudo apt-get install "${missing}"
+\e[1;33mIf you prefer, install the requested dependencies and restart this script\e[0m"
+UPDATES=1
 fi
 
 crossedge(){
-if xdpyinfo | grep '^screen #1'; then
+if xdpyinfo | grep -q '^screen #1'; then
 	echo -n
 else
 	echo -e "\e[1;31m## ERROR: screen 1 not found\e[0m"
 	exit 1
 fi
 
-processpath="${0}"
-processname="${processpath##*/}"
-for pid in $(pgrep "$processname"); do
-	if [ $pid != $$ ]; then
-		kill -15 $pid
+for pid in $(pgrep "${0##*/}"); do
+	if [ "${pid}" != $$ ]; then
+		kill -15 "${pid}"
 		pkill -15 -f "xdotool behave_screen_edge*"
 		exit 0
 	fi 
 done
 
-if echo $DELAY | grep -Poq '\d+'; then
+if echo "${DELAY}" | grep -Poq '\d+'; then
 	echo -n
 else
 	DELAY=0
 fi
 
-SLEEPTIME="$(perl -e "print $DELAY / 1000 + 0.255")"
-TIMEOUT="$(perl -e "print $SLEEPTIME + 0.745")"
+SLEEPTIME="$(perl -e "print "${DELAY}" / 1000 + 0.255")"
+TIMEOUT="$(perl -e "print "${SLEEPTIME}" + 0.745")"
 
 SCREEN0_RESOLUTION="$(xdpyinfo | grep -A2 '^screen #0' | grep 'dimensions:' | awk -F: '{print $2}' | awk -F' ' '{print $1}')"
-SCREEN0_XRESOLUTION="$(echo $SCREEN0_RESOLUTION | awk -Fx '{print $1}')"
-SCREEN0_YRESOLUTION="$(echo $SCREEN0_RESOLUTION | awk -Fx '{print $2}')"
-SCREEN0_XCENTER="$(perl -e "print $SCREEN0_XRESOLUTION / 2")"
-#SCREEN0_YCENTER="$(perl -e "print $SCREEN0_YRESOLUTION / 2")"
-#SCREEN0_XRESOLUTION_PERCENT="$(perl -e "print $SCREEN0_XRESOLUTION / 100")"
-SCREEN0_YRESOLUTION_PERCENT="$(perl -e "print $SCREEN0_YRESOLUTION / 100")"
+SCREEN0_XRESOLUTION="$(echo "${SCREEN0_RESOLUTION}" | awk -Fx '{print $1}')"
+SCREEN0_YRESOLUTION="$(echo "${SCREEN0_RESOLUTION}" | awk -Fx '{print $2}')"
+SCREEN0_XCENTER="$(perl -e "print "${SCREEN0_XRESOLUTION}" / 2")"
+#SCREEN0_YCENTER="$(perl -e "print "${SCREEN0_YRESOLUTION}" / 2")"
+#SCREEN0_XRESOLUTION_PERCENT="$(perl -e "print "${SCREEN0_XRESOLUTION}" / 100")"
+SCREEN0_YRESOLUTION_PERCENT="$(perl -e "print "${SCREEN0_YRESOLUTION}" / 100")"
 
 SCREEN1_RESOLUTION="$(xdpyinfo | grep -A2 '^screen #1' | grep 'dimensions:' | awk -F: '{print $2}' | awk -F' ' '{print $1}')"
-SCREEN1_XRESOLUTION="$(echo $SCREEN1_RESOLUTION | awk -Fx '{print $1}')"
-SCREEN1_YRESOLUTION="$(echo $SCREEN1_RESOLUTION | awk -Fx '{print $2}')"
-SCREEN1_XCENTER="$(perl -e "print $SCREEN1_XRESOLUTION / 2")"
-#SCREEN1_YCENTER="$(perl -e "print $SCREEN1_YRESOLUTION / 2")"
-#SCREEN1_XRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_XRESOLUTION / 100")"
-SCREEN1_YRESOLUTION_PERCENT="$(perl -e "print $SCREEN1_YRESOLUTION / 100")"
+SCREEN1_XRESOLUTION="$(echo "${SCREEN1_RESOLUTION}" | awk -Fx '{print $1}')"
+SCREEN1_YRESOLUTION="$(echo "${SCREEN1_RESOLUTION}" | awk -Fx '{print $2}')"
+SCREEN1_XCENTER="$(perl -e "print "${SCREEN1_XRESOLUTION}" / 2")"
+#SCREEN1_YCENTER="$(perl -e "print $SCREEN1_YRESOLUTION}" / 2")"
+#SCREEN1_XRESOLUTION_PERCENT="$(perl -e "print "${SCREEN1_XRESOLUTION}" / 100")"
+SCREEN1_YRESOLUTION_PERCENT="$(perl -e "print "${SCREEN1_YRESOLUTION}" / 100")"
+
 while true
 do
 eval $(xdotool getmouselocation --shell)
-if [ $SCREEN -eq 0 ]; then
-	CURRENTSCREEN_YRESOLUTION=$SCREEN0_YRESOLUTION
-	CURRENTSCREEN_XCENTER=$SCREEN0_XCENTER
-	NEXTSCREEN_XRESOLUTION=$SCREEN1_XRESOLUTION
-	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN1_YRESOLUTION_PERCENT
+if [ "${SCREEN}" -eq 0 ]; then
+	CURRENTSCREEN_YRESOLUTION="${SCREEN0_YRESOLUTION}"
+	CURRENTSCREEN_XCENTER="${SCREEN0_XCENTER}"
+	NEXTSCREEN_XRESOLUTION="${SCREEN1_XRESOLUTION}"
+	NEXTSCREEN_YRESOLUTION_PERCENT="${SCREEN1_YRESOLUTION_PERCENT}"
 	NEXTSCREEN=1
 else
-	CURRENTSCREEN_YRESOLUTION=$SCREEN1_YRESOLUTION
-	CURRENTSCREEN_XCENTER=$SCREEN1_XCENTER
-	NEXTSCREEN_XRESOLUTION=$SCREEN0_XRESOLUTION
-	NEXTSCREEN_YRESOLUTION_PERCENT=$SCREEN0_YRESOLUTION_PERCENT
+	CURRENTSCREEN_YRESOLUTION="${SCREEN1_YRESOLUTION}"
+	CURRENTSCREEN_XCENTER="${SCREEN1_XCENTER}"
+	NEXTSCREEN_XRESOLUTION="${SCREEN0_XRESOLUTION}"
+	NEXTSCREEN_YRESOLUTION_PERCENT="${SCREEN0_YRESOLUTION_PERCENT}"
 	NEXTSCREEN=0
 fi
-if [ $CROSSTYPE = "crossedge_side" ]; then
-	if [ $SCREEN -ne $SIDE ]; then
+if [ "${CROSSTYPE}" = "crossedge_side" ]; then
+	if [ "${SCREEN}" -ne "${SIDE}" ]; then
 		NEXTSCREEN_XMOUSECOORDINATE=0
 		EDGE=right
 	else
-		NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
+		NEXTSCREEN_XMOUSECOORDINATE="${NEXTSCREEN_XRESOLUTION}"
 		EDGE=left
 	fi
 else
-	if [ $X -gt $CURRENTSCREEN_XCENTER ]; then
+	if [ "${X}" -gt "${CURRENTSCREEN_XCENTER}" ]; then
 		NEXTSCREEN_XMOUSECOORDINATE=0
 		EDGE=right
 	else
-		NEXTSCREEN_XMOUSECOORDINATE=$NEXTSCREEN_XRESOLUTION
+		NEXTSCREEN_XMOUSECOORDINATE="${NEXTSCREEN_XRESOLUTION}"
 		EDGE=left
 	fi
 fi
-NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print $Y * 100 / $CURRENTSCREEN_YRESOLUTION * $NEXTSCREEN_YRESOLUTION_PERCENT")"
+NEXTSCREEN_YMOUSECOORDINATE="$(perl -e "print "${Y}" * 100 / "${CURRENTSCREEN_YRESOLUTION}" * "${NEXTSCREEN_YRESOLUTION_PERCENT}"")"
 pkill -15 -f "xdotool behave_screen_edge*"
-timeout -s SIGKILL $TIMEOUT xdotool behave_screen_edge --delay $DELAY $EDGE mousemove --screen $NEXTSCREEN $NEXTSCREEN_XMOUSECOORDINATE $NEXTSCREEN_YMOUSECOORDINATE > /dev/null &
-sleep $SLEEPTIME
+timeout -s SIGKILL "${TIMEOUT}" xdotool behave_screen_edge --delay "${DELAY}" "${EDGE}" mousemove --screen "${NEXTSCREEN}" "${NEXTSCREEN_XMOUSECOORDINATE}" "${NEXTSCREEN_YMOUSECOORDINATE}" > /dev/null &
+sleep "${SLEEPTIME}"
 done
 }
 
 teleport(){
-if xdpyinfo | grep '^screen #1'; then
+if xdpyinfo | grep -q '^screen #1'; then
 	echo -n
 else
 	echo -e "\e[1;31m## ERROR: screen 1 not found\e[0m"
@@ -139,22 +139,22 @@ else
 fi
 
 eval $(xdotool getmouselocation --shell)
-echo "X=$X
-Y=$Y" > /tmp/dualscreen_mouse_tools_coordinates_$SCREEN &
-if [ $SCREEN -eq 0 ]; then
+echo "X="${X}"
+Y="${Y}"" > /tmp/dualscreen_mouse_tools_coordinates_"${SCREEN}" &
+if [ "${SCREEN}" -eq 0 ]; then
 	NEXTSCREEN=1
 else
 	NEXTSCREEN=0
 fi
-if [ $REMEMBER = 'no' ]; then
-	xdotool mousemove --screen $NEXTSCREEN --polar 0 0 > /dev/null
+if [ "${REMEMBER}" = 'no' ]; then
+	xdotool mousemove --screen "${NEXTSCREEN}" --polar 0 0 > /dev/null
 else
-	if grep -Poq '\d+' /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN; then
-		OLDX="$(grep "X" /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN | grep -Po '\d+')"
-		OLDY="$(grep "Y" /tmp/dualscreen_mouse_tools_coordinates_$NEXTSCREEN | grep -Po '\d+')"
-		xdotool mousemove --screen $NEXTSCREEN $OLDX $OLDY > /dev/null
+	if grep -Poq '\d+' /tmp/dualscreen_mouse_tools_coordinates_"${NEXTSCREEN}"; then
+		OLDX="$(grep "X" /tmp/dualscreen_mouse_tools_coordinates_"${NEXTSCREEN}" | grep -Po '\d+')"
+		OLDY="$(grep "Y" /tmp/dualscreen_mouse_tools_coordinates_"${NEXTSCREEN}" | grep -Po '\d+')"
+		xdotool mousemove --screen "${NEXTSCREEN}" "${OLDX}" "${OLDY}" > /dev/null
 	else
-		xdotool mousemove --screen $NEXTSCREEN --polar 0 0 > /dev/null
+		xdotool mousemove --screen "${NEXTSCREEN}" --polar 0 0 > /dev/null
 	fi
 fi
 #if pgrep -x "compiz" > /dev/null; then
@@ -164,13 +164,20 @@ exit 0
 }
 
 update(){
+if [ "${UPDATES}" = "1" ]; then
+	echo -e "\e[1;31mThis script require \e[1;34m"${missing}"\e[1;31m in order to perform updates. Use \e[1;34msudo apt-get install "${missing}"
+\e[1;31mInstall the requested dependencies and restart this script\e[0m"
+	exit 1
+fi
 echo -e "\e[1;34mCheck for updates...\e[0m"
 if curl -s github.com > /dev/null; then
 	SCRIPT_LINK="https://raw.githubusercontent.com/KeyofBlueS/dualscreen-mouse-tools/master/dualscreen_mouse_tools.sh"
-	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "$SCRIPT_LINK" 2> /dev/null | grep "# Version:" | head -n 1)"
-	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
-	REPOSITORY_LINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
-	if echo "$LOCAL_VERSION" | grep -q "$UPSTREAM_VERSION"; then
+	TMPFOLDER="/tmp/dualscreen-mouse-tools"
+	REMOTESCRIPTNAME="${SCRIPT_LINK##*/}"
+	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "${SCRIPT_LINK}" 2> /dev/null | grep "# Version:" | head -n 1 | awk '{print $3}')"
+	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1 | awk '{print $3}')"
+	REPOSITORY_LINK="$(cat "${0}" | grep "# Repository:" | head -n 1 | awk '{print $3}')"
+	if [ "${LOCAL_VERSION}" = "${UPSTREAM_VERSION}" ]; then
 		echo -e "\e[1;32m
 ## This script is synced with upstream version
 \e[0m
@@ -178,13 +185,13 @@ if curl -s github.com > /dev/null; then
 	else
 		echo -e "\e[1;33m-----------------------------------------------------------------------------------	
 ## WARNING: this script is not synced with upstream version, visit:
-\e[1;32m$REPOSITORY_LINK
+\e[1;32m# Repository: "${REPOSITORY_LINK}"
 
-\e[1;33m$LOCAL_VERSION (locale)
-\e[1;32m$UPSTREAM_VERSION (upstream)
+\e[1;33m# Version: "${LOCAL_VERSION}" (locale)
+\e[1;32m# Version: "${UPSTREAM_VERSION}" (upstream)
 \e[1;33m-----------------------------------------------------------------------------------
 
-\e[1;35mHit ENTER to update this script or wait 10 seconds to exit
+\e[1;35mPress ENTER to update this script or wait 10 seconds to exit
 \e[1;31m## WARNING: any custom changes will be lost!!!
 \e[0m
 "
@@ -205,9 +212,12 @@ if curl -s github.com > /dev/null; then
 				scriptfolder="${scriptfolder%/*}/"
 				scriptname="${scriptpath##*/}"
 			fi
-			if timeout -s SIGTERM 15 curl -s -o /tmp/"${scriptname}" "$SCRIPT_LINK"; then
+			if [ -d ${TMPFOLDER} ]; then
+				rm -rf "${TMPFOLDER}"
+			fi
+			if timeout -s SIGTERM 15 git clone -b master "${REPOSITORY_LINK}" "${TMPFOLDER}"; then
 				if [[ -w "${scriptfolder}${scriptname}" ]] && [[ -w "${scriptfolder}" ]]; then
-					mv /tmp/"${scriptname}" "${scriptfolder}"
+					mv "${TMPFOLDER}"/"${REMOTESCRIPTNAME}" "${scriptfolder}${scriptname}"
 					chown root:root "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					chmod +x "${scriptfolder}${scriptname}" > /dev/null 2>&1
@@ -224,7 +234,7 @@ if curl -s github.com > /dev/null; then
 						fi
 					fi
 					done
-					sudo mv /tmp/"${scriptname}" "${scriptfolder}"
+					sudo mv "${TMPFOLDER}"/"${REMOTESCRIPTNAME}" "${scriptfolder}${scriptname}"
 					sudo chown root:root "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					sudo chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					sudo chmod +x "${scriptfolder}${scriptname}" > /dev/null 2>&1
@@ -237,16 +247,28 @@ Permission denied!
 				echo -e "\e[1;31m	Download error!
 \e[0m"
 			fi
-			LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
-			if echo "$LOCAL_VERSION" | grep -q "$UPSTREAM_VERSION"; then
+			if [ -d ${TMPFOLDER} ]; then
+					rm -rf "${TMPFOLDER}"
+			fi
+			LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1 | awk '{print $3}')"
+			if [ "${LOCAL_VERSION}" = "${UPSTREAM_VERSION}" ]; then
 				echo -e "\e[1;34m	Done!
 \e[0m"
-				exec "${scriptfolder}${scriptname}"
+				exit 0
+#				exec "${scriptfolder}${scriptname}"
 			else
 				echo -e "\e[1;31m	Error during update!
 \e[0m"
+				exit 1
 			fi
 		fi
+	fi
+else
+	echo -e "\e[1;31m	github.com cannot be reached! Press ENTER to exit or wait 5 seconds to retry\e[0m"
+	if read -t 5 _e; then
+		exit 1
+	else
+		update
 	fi
 fi
 exit 0
@@ -256,7 +278,7 @@ givemehelp(){
 echo '
 # dualscreen-mouse-tools
 
-# Version:    1.2.4
+# Version:    1.2.6
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/dualscreen-mouse-tools
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -305,7 +327,7 @@ You can define the relation of the screens, if you want the cursor to only pass 
 
 
 Options for switching screens:
---switch -s		Teleport the mouse pointer from the center of one screen to the center of the other screen
+--switch -s		Teleport the mouse pointer from one screen to the center of the other screen
 
 --switch-remember -w	Teleport the mouse pointer from one screen to the other screen, remembering last position if exist
 
